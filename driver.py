@@ -1,356 +1,303 @@
-# import sys
-# sys.path.insert(0,'/cmd_pkg')
-# from cmd_pkg import test 
-# print("Hello world")
-# input("% ")
-
-# print(dir(test))
-
-import threading
-import time
+#!/usr/bin/env python3
+"""
+Program Name: SHELL COMMANDS
+Team: Sai Nagesh Vadlani, Havila Pamidi
+Description: 
+	Implementation of "SHELL" in Python using the threads inorder to execute the each command in a thread.
+"""
+import cmd
+import argparse
+import multiprocessing as mp
+from os.path import dirname, realpath
 import sys
-import os
-import shutil
-import re
-from cat import cat
-from cp import cp
-from mv import mv
-from ls import ls
+sys.path.append(dirname(realpath(__file__)))
 
-class Driver(object):
-	def __init__(self):
-		pass
-
-    			
-	def runShell(var1,pipe):
-			
-			var=var1.split(" ") 
-								#splits the command into list
-			command0=var[0]			#stores command in a variable
-			
-			
-			occurance=var.count('>') #checking whether command has redirect ouput
-			count=var.count('>>')  #checking whether command has to append ouput
-		  
-			input=var.count('<') #checking whether command has redirect input
-			
-			#Checks whether & exists to set daemon status
-			daemoncount=var.count('&')
-			if daemoncount == 1:
-				daemonstatus="true"
-			else:
-				daemonstatus="false"
+from cmd_pkg import (
+    ls, mkdir, pwd, cd, cp, mv, rm, rmdir, cat, less,
+    head, tail, grep, wc, sort, who, chmod
+)
 
 
-            elif command0 == 'ls' and occurance == 0 and count == 0:
-				
-				if len(var) == 1:
-					l = threading.Thread(target=ls,args=(None,count,pipe,))
-					
-					l.start()
-					if daemonstatus == 'false':
-						l.join()
-				else:
-					command1=var[1]
-					if command1 == '-l':  # calls ls -l
-						l = threading.Thread(target=lsl,args=(None,count,pipe,))
-						
-						l.start()
-						if daemonstatus == 'false':
-							l.join()
-					elif command1 == '-a': #calls ls -a
-						l = threading.Thread(target=lsa,args=(None,count,pipe,))
-						
-						l.start()
-						if daemonstatus == 'false':
-							l.join()
-					elif command1 == '-h':  #calls ls -h
-						l = threading.Thread(target=lsh,args=(None,count,pipe,))
-						l.start()
-						if daemonstatus == 'false':
-							l.join() 
-					elif command1 == '-lh' or command1 == '-hl':
-						l=threading.Thread(target=lslh,args=(None,count,pipe,))
-						l.start()
-						if daemonstatus == 'false':
-							l.join()
-					elif command1 == '-la' or command1 == '-al':
-						l=threading.Thread(target=lsla,args=(None,count,pipe,))
-						l.start()
-						if daemonstatus == 'false':
-							l.join()
-					elif command1 == '-lah':
-						
-						l=threading.Thread(target=lslah,args=(None,count,pipe,))
-						l.start()
-						if daemonstatus == 'false':
-							l.join()
-					elif command1 == '-ah' or command1 == '-ha':
-							l=threading.Thread(target=lsah,args=(None,count,pipe,))
-							l.start()
-							if daemonstatus == 'false':
-								l.join()	
-
-            elif command0 == 'mv':
-				if len(var) == 1 or var[1].count('.') == 0 :
-					print("Invalid command")
-				else:
-					command1=var[1]
-					command2=var[2]
-					c=threading.Thread(target=mv,args=(command1,command2,))
-					c.start()
-					if daemonstatus == 'false':
-						c.join()
-            
+def make_parser(args, flags, name='files'):
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument(name, metavar='N', type=str, nargs=argparse.REMAINDER)
+    for flag in flags:
+        parser.add_argument('-' + flag, action='store_true')
+    parsed = parser.parse_args(args)
+    return parsed
 
 
-            elif occurance == 1 or count == 1:
-            
+def wrap(f):
+    def _wrapped(*args):
+        _self = args[0]
+        rest = args[1]
+        if '--help' in rest:
+            print(f.__doc__)
+            return
 
-            elif command0 == 'ls':
-					if len(var) == 3:
-						command1=var[2]
-						c=threading.Thread(target=ls,args=(command1,count,pipe,))
-						
-						c.start()
-						if daemonstatus == 'false':
-							c.join()
-					else:
-						command1=var[1]
-						command2=var[3]
-						if command1 == '-l':  # calls ls -l
-							l = threading.Thread(target=lsl,args=(command2,count,pipe,))
-							
-							l.start()
-							if daemonstatus == 'false':
-								l.join()
-						elif command1 == '-a': #calls ls -a
-							l = threading.Thread(target=lsa,args=(command2,count,pipe,))
-							
-							l.start()
-							if daemonstatus == 'false':
-								l.join()
-						elif command1 == '-h':  #calls ls -h
-							l = threading.Thread(target=lsh,args=(command2,count,pipe,))
-							l.start()
-							if daemonstatus == 'false':
-								l.join() 
-						elif command1 == '-lh' or command1 == 'hl':
-							l=threading.Thread(target=lslh,args=(command2,count,pipe,))
-							
-							l.start()
-							if daemonstatus == 'false':
-								l.join()
-						elif command1 == '-la' or command1 == 'al':
-							l=threading.Thread(target=lsla,args=(command2,count,pipe,))
-							
-							l.start()
-							if daemonstatus == 'false':
-								l.join()
-						elif command1 == '-lah':
-							l=threading.Thread(target=lslah,args=(command2,count,pipe,))
-							l.start()
-							if daemonstatus == 'false':
-								l.join()
-						elif command1 == '-ah' or command1 == '-ha':
-							l=threading.Thread(target=lsah,args=(command2,count,pipe,))
-							l.start()
-							if daemonstatus == 'false':
-								l.join()
-					
-					
-	def exit():
-		raise SystemExit
-		
-		
-	if __name__ == '__main__':
-	
-	
-		#Asks input for entering commands to user till exiting from shell
+        background = rest.endswith('&')
+        arguments = args
+        second = None
+        second_type = None
+        for sep in ['|', '>>', '>', '<']:
+            if sep in rest:
+                first, second = rest.split(sep)
+                arguments = (_self, first)
+                # remove trailing whitespaces
+                second = second.replace(' ', '')
+                second_type = sep
+                break
 
-		
-		
-		while True:
-			print("\n")
-			var=raw_input("%")  # takes input from shell
-			if len(var) == 0:
-				continue
-			var1=var.split(" ")
-			history(*var1)#command entered by user will be stored in history file   
-			
+        #def _fn(second, second_type, arguments):
+        #    out = f(*arguments)
+        #    if second is None:
+        #        print(out)
+        #    else:
+        #        #if second_type == '|':
+        #        #    _self.onecmd(second + ' ' + out)
+        #        if second_type == '>':
+        #            with open(second, 'w') as o:
+        #                o.write(out)
+        #        elif second_type == '>>':
+        #            with open(second, 'a') as o:
+        #                o.write(out)
+        #        elif second_type == '<':
+        #            inp = open(second).read()
+        #            print(f(_self, inp))
+        #    return
 
-			pipe=0
-			
-			#if piping to be implemented
-			
-			if '|' in var:
-				commands=var.split("|")
-				pipe=1
-				if len(commands) == 2:
-					firstcommand=commands[0]
-					firstcommand=firstcommand.strip()
-					
-					runShell(firstcommand,pipe)
-					pipe=0
-					redirect=commands[1].count('>')
-					append=commands[1].count('>>')
-					if redirect == 0 and append == 0:
-						secondcommand=commands[1]+'\t'+"pipe.txt"
-						secondcommand=secondcommand.lstrip()
-						secondcommand=' '.join(secondcommand.split())
-						
-						runShell(secondcommand,pipe)
-					elif redirect == 1 :
-						commandlist=commands[1].split(">")
-						
-						passedcommand=commandlist[0]+'\t'+"pipe.txt"+'\t'+">"+"\t"+commandlist[1]
-						passedcommand=passedcommand.lstrip();
-						passedcommand=' '.join(passedcommand.split())
-						
-						runShell(passedcommand,pipe)
-					elif append == 1:
-						commandlist=commands[1].split(">")
-						passedcommand=commandlist[0]+'\t'+"pipe.txt"+'\t'+">>"+"\t"+commandlist[1]
-						passedcommand=passedcommand.lstrip();
-						passedcommand=' '.join(passedcommand.split())
-						runShell(passedcommand,pipe)	
-						
-					
-				elif len(commands) == 3:
-					runShell(commands[0],pipe)
-					
-					secondcommand=commands[1]+'\t'+"pipe.txt"
-					secondcommand=secondcommand.lstrip();
-					secondcommand=' '.join(secondcommand.split())
-					runShell(secondcommand,pipe)
-					
-					pipe=0
-					redirect=commands[2].count('>')
-					append=commands[2].count('>>')
-					if redirect == 0 and append == 0:
-						thirdcommand=commands[2]+'\t'+"pipe.txt"
-						thirdcommand=thirdcommand.lstrip();
-						thirdcommand=' '.join(thirdcommand.split())
-						
-						runShell(thirdcommand,pipe)
-					elif redirect == 1:
-						commandlist=commands[2].split(">")
-						passedcommand=commandlist[0]+'\t'+"pipe.txt"+'\t'+">"+"\t"+commandlist[1]
-						passedcommand=passedcommand.lstrip();
-						passedcommand=' '.join(passedcommand.split())
-						runShell(passedcommand,pipe)
-						
-					elif append == 1:
-						commandlist=commands[2].split(">")
-						passedcommand=commandlist[0]+'\t'+"pipe.txt"+'\t'+">>"+"\t"+commandlist[1]
-						passedcommand=passedcommand.lstrip();
-						passedcommand=' '.join(passedcommand.split())
-						runShell(passedcommand,pipe)
-				
-				elif len(commands) == 4:
-					runShell(commands[0],pipe)
-					secondcommand=commands[1]+'\t'+"pipe.txt"
-					secondcommand=secondcommand.lstrip();
-					secondcommand=' '.join(secondcommand.split())
-					runShell(secondcommand,pipe)
-					
-					thirdcommand=commands[2]+'\t'+"pipe.txt"
-					thirdcommand=thirdcommand.lstrip();
-					thirdcommand=' '.join(thirdcommand.split())
-					runShell(thirdcommand,pipe)
-					redirect=commands[3].count('>')
-					append=commands[3].count('>>')
-					pipe=0
-					if redirect == 0 and append == 0:
-						fourthcommand=commands[3]+'\t'+"pipe.txt"
-						fourthcommand=fourthcommand.lstrip();
-						fourthcommand=' '.join(fourthcommand.split())
-						runShell(fourthcommand,pipe)
-					elif redirect == 1:
-						commandlist=commands[3].split(">")
-						passedcommand=commandlist[0]+'\t'+"pipe.txt"+'\t'+">"+"\t"+commandlist[1]
-						passedcommand=passedcommand.lstrip();
-						passedcommand=' '.join(passedcommand.split())
-						runShell(passedcommand,pipe)
-						
-					elif append == 1:
-						commandlist=commands[3].split(">")
-						passedcommand=commandlist[0]+'\t'+"pipe.txt"+'\t'+">>"+"\t"+commandlist[1]
-						passedcommand=passedcommand.lstrip();
-						passedcommand=' '.join(passedcommand.split())
-						runShell(passedcommand,pipe)
+        print(f(*arguments))
+        _self.hist.append(f.__name__[3:] + ' ' + rest)
+    return _wrapped
 
-				elif len(commands) == 5:
-					runShell(commands[0],pipe)
-					secondcommand=commands[1]+'\t'+"pipe.txt"
-					secondcommand=secondcommand.lstrip();
-					secondcommand=' '.join(secondcommand.split())
-					runShell(secondcommand,pipe)
-					
-					thirdcommand=commands[2]+'\t'+"pipe.txt"
-					thirdcommand=thirdcommand.lstrip();
-					thirdcommand=' '.join(thirdcommand.split())
-					runShell(thirdcommand,pipe)
-					fourthcommand=commands[3]+'\t'+"pipe.txt"
-					fourthcommand=fourthcommand.lstrip();
-					fourthcommand=' '.join(fourthcommand.split())
-					runShell(fourthcommand,pipe)
-					
-					
-					redirect=commands[4].count('>')
-					append=commands[4].count('>>')
-					pipe=0
-					if redirect == 0 and append == 0:
-						fifthcommand=commands[4]+'\t'+"pipe.txt"
-						fifthcommand=fifthcommand.lstrip();
-						fifthcommand=' '.join(fifthcommand.split())
-						runShell(fifthcommand,pipe)
-					elif redirect == 1:
-						commandlist=commands[4].split(">")
-						passedcommand=commandlist[0]+'\t'+"pipe.txt"+'\t'+">"+"\t"+commandlist[1]
-						passedcommand=passedcommand.lstrip();
-						passedcommand=' '.join(passedcommand.split())
-						runShell(passedcommand,pipe)
-						
-					elif append == 1:
-						commandlist=commands[4].split(">")
-						passedcommand=commandlist[0]+'\t'+"pipe.txt"+'\t'+">>"+"\t"+commandlist[1]
-						passedcommand=passedcommand.lstrip();
-						passedcommand=' '.join(passedcommand.split())
-						runShell(passedcommand,pipe)
-						
-						
-						
-						
-			
-			#if command to be executed from history then..
-			
-			elif var[0] == '!':
-				f=open("history.txt",'r')
-				num=int(var[1:])
-				num=num-1
-				for i, line in enumerate(f):
-					if i == num:
-						var=line
-						number=str(num)
-						length=len(number)
-						var1=var[length:]
-						var1=var1.lstrip()
-						var2=' '.join(var1.split())
-						runShell(var2,pipe)
-							
-							
-							
-			#if entered command is exit				
-			
-			
-			elif str.lower(var) == 'exit':
-				exit()
-				
-			#if any commands entered ,then passed to runShell method as parameter	
-			else:
-				runShell(var,pipe)
-			
-	
-		
-                            
+
+class Shell(cmd.Cmd):
+    intro = 'Type help or ? to list commands. Type exit to exit.\n'
+    prompt = '% '
+
+    def __init__(self):
+        super().__init__()
+        self.hist = []
+
+    @wrap
+    def do_ls(self, args):
+        """
+        list files and directories
+        usage: ls [-h] [-l] [-a] [--help] files1 ... file2
+
+        optional arguments:
+        --help  show this help message and exit
+        -a      list all show hidden files
+        -h      human readable sizes
+        -l      long listing
+        """
+
+        if args == '':
+            args = '.'
+        args = args.split()
+        if args[-1].startswith('-'):
+            args.append('.')
+        parsed = make_parser(args, ['l', 'h', 'a'], name='dirs')
+        return ls(parsed.dirs, parsed.h, parsed.a, parsed.l)
+
+    @wrap
+    def do_mkdir(self, args):
+        """
+        make a directory
+        usage: mkdir dirname
+        """
+        return mkdir(args.split())
+
+    @wrap
+    def do_pwd(self, args):
+        """
+        display the path of the current directory
+        usage: pwd
+        """
+        return pwd()
+
+    @wrap
+    def do_cd(self, arg):
+        """
+        change to a directory
+        usage: cd directory
+        if directory is
+        ~  change to home-directory
+        .. change to parent directory
+        """
+        return cd(arg)
+
+    @wrap
+    def do_cp(self, args):
+        """
+        copy file1 and call it file2
+        usage: cp file1 file2
+        """
+        args = args.split()
+        if len(args) > 2:
+            return 'max 2 args'
+        _from = args[0]
+        to = args[1]
+        return cp(_from, to)
+
+    @wrap
+    def do_mv(self, args):
+        """
+        move or rename file1 to file2
+        usage: mv file1 file2
+        """
+        args = args.split()
+        if len(args) > 2:
+            return 'max 2 args'
+        _from = args[0]
+        to = args[1]
+        return mv(_from, to)
+
+    @wrap
+    def do_rm(self, args):
+        """
+        remove a file
+        usage: rm [-r] file
+        if file has a wildcard, removes files that matches that wildcard
+
+        optional arguments:
+        -r recurses into non-empty folder to delete all
+        """
+        # TODO -r
+        args = args.split()
+        parsed = make_parser(args, ['r'])
+        return rm(parsed.files, parsed.r)
+
+    @wrap
+    def do_rmdir(self, arg):
+        """
+        remove a directory
+        usage: rmdir directory
+        """
+        return rmdir(arg)
+
+    @wrap
+    def do_cat(self, args):
+        """
+        display a file or multiple files concatenated
+        usage: cat file1 file2 ... fileN
+        """
+        return cat(args.split())
+
+    @wrap
+    def do_less(self, arg):
+        """
+        display a file a page at a time
+        usage: less file
+        """
+        less(arg)
+
+    @wrap
+    def do_head(self, args):
+        """
+        display the first few lines of a file
+        usage: head [-n c] file
+
+        optional arguments:
+        -n c how many lines to display
+        """
+        arg = args
+        n = 10
+        if '-n' in args:
+            _, nstr, arg = args.split()
+            n = int(nstr)
+        return head(arg, n)
+
+    @wrap
+    def do_tail(self, args):
+        """
+        display the last few lines of a file
+        usage: head [-n c] file
+
+        optional arguments:
+        -n c how many lines to display
+        """
+        arg = args
+        n = 10
+        if '-n' in args:
+            _, nstr, arg = args.split()
+            n = int(nstr)
+
+        return tail(arg, n)
+
+    @wrap
+    def do_grep(self, args):
+        """
+        search file(s) for keywords and print lines where pattern is found
+        usage: grep [-l] 'keyword' file1 file2 ... fileN
+
+        optional arguments:
+        -l only return file names where the word or pattern is found
+        """
+        args = args.split()
+        parsed = make_parser(args, ['l'])
+        pattern = parsed.files[0]
+        return grep(pattern, parsed.files[1:], parsed.l)
+
+    @wrap
+    def do_wc(self, args):
+        """
+        count number of lines/words/characters in file
+        usage: wc [-l] [-m] [-w] file
+
+        optional arguments:
+        -l count number of lines in file
+        -m count number of characters in file
+        -w count number of words in file
+        """
+        args = args.split()
+        parsed = make_parser(args, ['l', 'm', 'w'])
+        return wc(parsed.files, parsed.l, parsed.m, parsed.w)
+
+    @wrap
+    def do_sort(self, args):
+        """
+        sort data
+        usage: sort data
+        """
+        return sort(args)
+
+    @wrap
+    def do_who(self, args):
+        """
+        list users currently logged in
+        usage: who
+        """
+        return who()
+
+    @wrap
+    def do_chmod(self, args):
+        """
+        change modify permission
+        usage: chmod xxx file
+        """
+        args = args.split()
+        if len(args) > 2:
+            return 'only 2 args max'
+        perm, _f = args
+        chmod(perm, _f)
+# """
+# COMMAND NAME 	  :  history
+# DESCRIPTION       :  It is used to show history of all commands in the file.
+# """
+    @wrap
+    def do_history(self, args):
+        return '\n'.join(self.hist)
+
+    def do_shell(self, args):
+        # For command starting with !
+        cmd = self.hist[int(args)]
+        print(cmd)
+        self.onecmd(cmd)
+
+    def do_exit(self, args):
+        exit()
+
+
+if __name__ == '__main__':
+    Shell().cmdloop()
