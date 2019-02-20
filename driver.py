@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-
+"""
+Program Name: SHELL COMMANDS
+Team: Sai Nagesh Vadlani, Havila Pamidi
+Description: 
+	Implementation of "SHELL" in Python using the threads inorder to execute the each command in a thread.
+"""
 import cmd
 import argparse
 import multiprocessing as mp

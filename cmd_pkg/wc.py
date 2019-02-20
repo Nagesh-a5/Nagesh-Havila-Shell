@@ -1,3 +1,8 @@
+"""
+COMMAND NAME      :  wc (word count)
+DESCRIPTION       :  It is used to count the words,lines and characters in a file.
+PARAMETERS        :  file
+"""
 def wc(args, _l, _m, _w, from_pipe=False):
     out = []
 
