@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-"""
-Program Name: SHELL COMMANDS
-Team: Sai Nagesh Vadlani, Havila Pamidi
-Description: 
-	Implementation of "SHELL" in Python using the threads inorder to execute the each command in a thread.
-"""
+
 import cmd
 import argparse
 import multiprocessing as mp
 from os.path import dirname, realpath
 import sys
+
 sys.path.append(dirname(realpath(__file__)))
 
 from cmd_pkg import (
@@ -48,36 +44,36 @@ def wrap(f):
                 second_type = sep
                 break
 
-        #def _fn(second, second_type, arguments):
-        #    out = f(*arguments)
-        #    if second is None:
-        #        print(out)
-        #    else:
-        #        #if second_type == '|':
-        #        #    _self.onecmd(second + ' ' + out)
-        #        if second_type == '>':
-        #            with open(second, 'w') as o:
-        #                o.write(out)
-        #        elif second_type == '>>':
-        #            with open(second, 'a') as o:
-        #                o.write(out)
-        #        elif second_type == '<':
-        #            inp = open(second).read()
-        #            print(f(_self, inp))
-        #    return
+        out = f(*arguments)
+        if second is None:
+            print(out)
+        else:
+            if second_type == '|':
+                _self.from_pipe = True
+                _self.onecmd(second + ' ' + out)
+                _self.from_pipe = False
+            if second_type == '>':
+                with open(second, 'w') as o:
+                    o.write(out)
+            elif second_type == '>>':
+                with open(second, 'a') as o:
+                    o.write(out)
+            elif second_type == '<':
+                inp = open(second).read()
+                print(f(_self, inp))
 
-        print(f(*arguments))
         _self.hist.append(f.__name__[3:] + ' ' + rest)
     return _wrapped
 
 
 class Shell(cmd.Cmd):
     intro = 'Type help or ? to list commands. Type exit to exit.\n'
-    prompt = '% '
+    prompt = '$> '
 
     def __init__(self):
         super().__init__()
         self.hist = []
+        self.from_pipe = False
 
     @wrap
     def do_ls(self, args):
@@ -252,7 +248,7 @@ class Shell(cmd.Cmd):
         """
         args = args.split()
         parsed = make_parser(args, ['l', 'm', 'w'])
-        return wc(parsed.files, parsed.l, parsed.m, parsed.w)
+        return wc(parsed.files, parsed.l, parsed.m, parsed.w, self.from_pipe)
 
     @wrap
     def do_sort(self, args):
@@ -281,10 +277,7 @@ class Shell(cmd.Cmd):
             return 'only 2 args max'
         perm, _f = args
         chmod(perm, _f)
-# """
-# COMMAND NAME 	  :  history
-# DESCRIPTION       :  It is used to show history of all commands in the file.
-# """
+
     @wrap
     def do_history(self, args):
         return '\n'.join(self.hist)

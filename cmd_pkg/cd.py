@@ -1,12 +1,9 @@
 import os
-"""
-COMMAND NAME   :   cd (change directory)
-DESCRIPTION    :   Used to change directory to named directory.
-        ~      :  Used to change directory to home directory.
-       ..      :   Used to change directory to parent directory
-PARAMETERS     :  Directory
-"""
+from os.path import expanduser
+
 
 def cd(arg):
+    if '~' in arg:
+        arg = arg.replace('~', expanduser('~'))
     os.chdir(arg)
     return 'in ' + os.getcwd()
