@@ -12,13 +12,14 @@ def grep(pattern, files, _l):
         found = False
         with open(fname, 'r') as f:
             count = 0
-            for line in f:
-                count += 1
+            for line in f:  
                 if re.search(pattern, line):
+                    count += 1
                     if _l:
                         found = True
-                        break
-                    out.append(str(count) + ' ' + line)
+                    
             if found:
                 out.append(fname + '\n')
+                out.append(str(count) + ' ')
+                
     return ''.join(out)
