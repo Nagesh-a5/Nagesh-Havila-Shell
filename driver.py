@@ -73,7 +73,7 @@ def wrap(f):
 
 class Shell(cmd.Cmd):
     intro = 'Type help or ? to list commands. Type exit to exit.\n'
-    prompt = '$> '
+    prompt = '% '
 
     def __init__(self):
         super().__init__()
